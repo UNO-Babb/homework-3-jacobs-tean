@@ -3,59 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hexagon Tile Game</title>
+    <title>Board Game</title>
     <style>
         body {
+            font-family: Arial, sans-serif;
+        }
+        .board {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 550px;
+            margin: 20px auto;
+        }
+        .space {
+            width: 50px;
+            height: 50px;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            font-size: 12px;
+            margin: 2px;
+            border: 1px solid #333;
         }
-        #board {
-            display: grid;
-            grid-template-columns: repeat(10, 60px);
-            grid-template-rows: repeat(10, 52px);
-            gap: 2px;
+        .blue {
+            background-color: blue;
+            color: white;
         }
-        .hex {
-            width: 60px;
-            height: 52px;
-            background-color: lightgray;
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            transition: background-color 0.2s;
+        .red {
+            background-color: red;
+            color: white;
+        }
+        .empty {
+            background-color: #eee;
+        }
+        .home-base {
+            width: 50px;
+            height: 50px;
+            background-color: yellow;
+            font-size: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .scoreboard {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .btn:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
 
-<div id="board">
-    <!-- Hexagonal tiles will be added here on clicks -->
-</div>
+<h1>Board Game</h1>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Display winner if the game is over -->
+{% if game_state['winner'] %}
+    <h2>{{ game_state['winner'] }} Team Wins!</h2>
+{% else %}
+    <div class="scoreboard">
+        <div>Blue Home: {{ game_state['blue_home'] }} / 6</div>
+        <div>Red Home: {{ game_state['red_home'] }} / 6</div>
+    </div>
+
+    <div class="board">
+        <!-- Home base spaces -->
+        <div class="home-base">{{ game_state['blue_pieces'].count(-1) }} Blue Home</div>
+        {% for i in range(26) %}
+            <div class="space 
+                {% if i in game_state['blue_pieces'] %}blue{% endif %}
+                {% if i in game_state['red_pieces'] %}red{% endif %}
+                {% if i not in game_state['blue_pieces'] and i not in game_state['red_pieces'] %}empty{% endif %}
+                ">
+                {{ i }}
+            </div>
+        {% endfor %}
+        <div class="home-base">{{ game_state['red_pieces'].count(26) }} Red Home</div>
+    </div>
+
+    <p>It's {{ game_state['turn'] }} team's turn!</p>
+
+    <button class="btn" id="rollButton" onclick="window.location.href='/roll_dice'">Roll Dice</button>
+{% endif %}
+
 <script>
-    $(document).ready(function() {
-        // Create an empty board of hex tiles
-        for (let i = 0; i < 100; i++) {
-            const hexTile = $('<div class="hex"></div>');
-            hexTile.data("clicked", false);  // Track if a tile has been clicked
-            $('#board').append(hexTile);
+    // Add event listener for the Enter key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            // Trigger the dice roll by clicking the button
+            document.getElementById('rollButton').click();
         }
-
-        // Add color to hex tiles on click
-        $('#board').on('click', '.hex', function() {
-            if (!$(this).data("clicked")) {  // Only allow one click per tile
-                $.getJSON('/add_tile', function(data) {
-                    $(this).css('background-color', data.color);
-                    $(this).data("clicked", true);  // Mark as clicked
-                }.bind(this));
-            }
-        });
     });
 </script>
 
 </body>
 </html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Over</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>{{ winner }} Team Wins!</h1>
+    <p>Would you like to play again?</p>
+
+    <!-- Ensure that the form sends a POST request -->
+    <form method="POST">
+        <button class="btn" type="submit">Yes, Play Again!</button>
+    </form>
+
+    <a href="/" class="btn">No, Exit</a>
+
+</body>
+</html>
+
